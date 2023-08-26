@@ -231,14 +231,19 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
         ) {
             val fieldName = property.simpleName.asString()
             val isNullable = property.type.resolve().isMarkedNullable
-            val isActivity = when (parentRouteType) {
-                RouteType.ACTIVITY -> true
-                RouteType.FRAGMENT -> false
-                else -> {
-                    throw IllegalAccessException("The field [$fieldName] need autowired from intent, its parent must be activity or fragment!")
-                }
-            }
-            val intent = if (isActivity) "intent?.extras" else "arguments"
+            val isActivity = parentRouteType == RouteType.ACTIVITY
+            val isFragment = parentRouteType == RouteType.FRAGMENT
+            val isOther = !isActivity && !isFragment
+            //这里放开权限，如果某个类需要注入，只需实现intent 变量即可
+//            val isActivity = when (parentRouteType) {
+//                RouteType.ACTIVITY -> true
+//                RouteType.FRAGMENT -> false
+//                else -> {
+//                    throw IllegalAccessException("The field [$fieldName] need autowired from intent, its parent must be activity or fragment!")
+//                }
+//            }
+            val intent =
+                if (isActivity || isOther) "intent?.extras" else if (isFragment) "arguments" else "intent?.extras"
             val annotation = property.findAnnotationWithType<Autowired>()!!
             val bundleName = annotation.name.ifEmpty { fieldName }
 
@@ -301,7 +306,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                     }
 
                     TypeKind.SERIALIZABLE -> {
-                        val beginStatement = if (isActivity) {
+                        val beginStatement = if (isActivity || isOther) {
                             "(substitute.intent?.getSerializableExtra(%S) as? %T)?.let"
                         } else {
                             "(substitute.arguments?.getSerializable(%S) as? %T)?.let"
@@ -315,7 +320,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                     }
 
                     TypeKind.PARCELABLE -> {
-                        val beginStatement = if (isActivity) {
+                        val beginStatement = if (isActivity || isOther) {
                             "substitute.intent?.getParcelableExtra<%T>(%S)?.let"
                         } else {
                             "substitute.arguments?.getParcelable<%T>(%S)?.let"

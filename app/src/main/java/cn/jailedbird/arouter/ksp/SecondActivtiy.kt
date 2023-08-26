@@ -7,10 +7,14 @@ import cn.jailedbird.arouter.ksp.data.TestData
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
+import com.ashlikun.core.activity.BaseActivity
+import com.ashlikun.core.mvvm.BaseMvvmActivity
+import com.ashlikun.core.mvvm.IViewModel
 import java.io.Serializable
 
+@IViewModel(SecondViewModel::class)
 @Route(path = "/app/SecondActivtiy")
-class SecondActivtiy<T> : AppCompatActivity() {
+class SecondActivtiy<T> : BaseMvvmActivity<SecondViewModel>() {
 
     var t: T = "" as T
 
@@ -45,5 +49,8 @@ class SecondActivtiy<T> : AppCompatActivity() {
         Log.d("TAG pParcelable", pParcelable.toString())
         Log.d("TAG serializable", serializable.toString())
 
+    }
+
+    override fun initView() {
     }
 }
