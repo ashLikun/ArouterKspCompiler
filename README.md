@@ -161,4 +161,6 @@ ksp.incremental.intermodule=true
 - https://kotlinlang.org/docs/ksp-overview.html#symbolprocessorprovider-the-entry-point
 
 
-
+### Debug
+- https://www.jianshu.com/p/10e7a6a6c53c
+- ./gradlew --no-daemon -Dorg.gradle.debug=true :app:clean :app:compileDebugJavaWithJavac

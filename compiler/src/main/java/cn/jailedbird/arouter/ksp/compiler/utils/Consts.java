@@ -55,6 +55,7 @@ public class Consts {
     public static final String KBOOLEAN = KOTLIN + ".Boolean";
     public static final String KCHAR = KOTLIN + ".Char";
     public static final String KSTRING = KOTLIN + ".String";
+    public static final String KARRAYLIST ="kotlin.collections.ArrayList";
 
     // Custom interface
     private static final String FACADE_PACKAGE = "com.alibaba.android.arouter.facade";

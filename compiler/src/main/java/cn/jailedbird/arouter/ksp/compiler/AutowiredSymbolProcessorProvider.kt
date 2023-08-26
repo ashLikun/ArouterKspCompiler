@@ -119,10 +119,15 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                     JSON_SERVICE_CLASS_NAME
                 )
                 val parentClassName = parent.toClassName()
+                //泛型支持
+                val typeParams = if (parent?.typeParameters.isNullOrEmpty()) "" else
+                    parent!!.typeParameters.joinToString(", ", "<", ">") {
+                        "*"
+                    }
                 val message =
                     "The target that needs to be injected must be ${parentClassName.simpleName}, please check your code!"
                 injectMethodBuilder.addStatement(
-                    "val substitute = (target as? %T)?: throw IllegalStateException(\n·%S\n·)",
+                    "val substitute = (target as? %T${typeParams})?: throw IllegalStateException(·%S·)",
                     parentClassName, message
                 )
 
@@ -134,8 +139,11 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                         addProviderStatement(child, injectMethodBuilder, parentClassName)
                     } else { // It's normal intent value (activity or fragment)
                         addActivityOrFragmentStatement(
-                            child, injectMethodBuilder, TypeKind.values()[child.typeExchange()],
-                            parentRouteType, parentClassName
+                            child,
+                            injectMethodBuilder,
+                            TypeKind.values()[child.typeExchange(logger)],
+                            parentRouteType,
+                            parentClassName
                         )
                     }
                 }
@@ -274,7 +282,8 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
             } else {
                 // such as: val param = List<JailedBird> ==> %T ==> List<JailedBird>
                 val parameterClassName = property.getKotlinPoetTTypeGeneric()
-
+//                logger.warn(">>> 开始设置字段. <<<")
+//                logger.warn("${fieldName}     ${type}")
                 when (type) {
                     TypeKind.STRING -> {
                         method.addCode(
@@ -290,6 +299,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                                 .build()
                         )
                     }
+
                     TypeKind.SERIALIZABLE -> {
                         val beginStatement = if (isActivity) {
                             "(substitute.intent?.getSerializableExtra(%S) as? %T)?.let"
@@ -303,6 +313,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                                 .endControlFlow().build()
                         )
                     }
+
                     TypeKind.PARCELABLE -> {
                         val beginStatement = if (isActivity) {
                             "substitute.intent?.getParcelableExtra<%T>(%S)?.let"
@@ -316,6 +327,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                                 .endControlFlow().build()
                         )
                     }
+
                     TypeKind.OBJECT -> {
                         val message =
                             "You want automatic inject the field '${fieldName}' in class '${parentClassName.simpleName}', then you should implement 'SerializationService' to support object auto inject!"
@@ -339,6 +351,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                             )
                             .endControlFlow()
                     }
+
                     else -> {
                         // This branch will not be reach
                         error("This branch will not be reach")

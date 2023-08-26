@@ -52,10 +52,12 @@ internal fun KSClassDeclaration.isSubclassOf(
             declaration is KSClassDeclaration && declaration.qualifiedName?.asString() == superClassName -> {
                 return true
             }
+
             declaration is KSClassDeclaration -> {
                 superClasses.removeAt(0)
                 superClasses.addAll(0, declaration.superTypes.toList())
             }
+
             else -> {
                 superClasses.removeAt(0)
             }
@@ -73,10 +75,12 @@ internal fun KSClassDeclaration.isSubclassOf(superClassNames: List<String>): Int
             declaration is KSClassDeclaration && (superClassNames.indexOf(declaration.qualifiedName?.asString())) != -1 -> {
                 return superClassNames.indexOf(declaration.qualifiedName?.asString())
             }
+
             declaration is KSClassDeclaration -> {
                 superClasses.removeAt(0)
                 superClasses.addAll(0, declaration.superTypes.toList())
             }
+
             else -> {
                 superClasses.removeAt(0)
             }
@@ -101,6 +105,58 @@ internal fun KSPropertyDeclaration.isSubclassOf(superClassNames: List<String>): 
     } else {
         -1
     }
+}
+
+/**
+ * 是否是序列化类
+ */
+internal fun KSPropertyDeclaration.isParcelable(): Boolean {
+    val propertyType = type.resolve().declaration
+    if (propertyType.qualifiedName?.asString() == Consts.PARCELABLE) {
+        return true
+    }
+    return if (propertyType is KSClassDeclaration) {
+        propertyType.isParcelable()
+    } else {
+        return false
+    }
+}
+
+/**
+ * 是否是序列化类
+ */
+internal fun KSPropertyDeclaration.isSerializable(): Boolean {
+    val propertyType = type.resolve().declaration
+    if (propertyType.qualifiedName?.asString() == Consts.SERIALIZABLE) {
+        return true
+    }
+    return if (propertyType is KSClassDeclaration) {
+        propertyType.isSerializable()
+    } else {
+        return false
+    }
+}
+
+/**
+ * 是否是序列化类
+ */
+internal fun KSClassDeclaration.isParcelable(): Boolean {
+    return this.superTypes
+        .mapNotNull { it.resolve().declaration.qualifiedName?.asString() }
+        .any {
+            it == Consts.PARCELABLE
+        }
+}
+
+/**
+ * 是否是序列化类
+ */
+internal fun KSClassDeclaration.isSerializable(): Boolean {
+    return this.superTypes
+        .mapNotNull { it.resolve().declaration.qualifiedName?.asString() }
+        .any {
+            it == Consts.SERIALIZABLE
+        }
 }
 
 internal fun String.quantifyNameToClassName(): ClassName {

@@ -5,12 +5,26 @@ import com.alibaba.android.arouter.facade.enums.TypeKind
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import java.io.Serializable
+import kotlin.reflect.KClass
+import kotlin.reflect.typeOf
 
 /**
  * AutoWire Inject Field Type check and convert
  * */
-internal fun KSPropertyDeclaration.typeExchange(): Int {
+internal fun KSPropertyDeclaration.typeExchange(logger: KSPLoggerWrapper? = null): Int {
     val type = this.type.resolve()
+//    logger?.warn("2222222222222999999999999999999999999aaaaaaaaaaaaaaaaaaaa")
+//    logger?.warn(type.declaration.qualifiedName?.asString().orEmpty())
+//    if (type.declaration.qualifiedName?.asString().orEmpty() == "kotlin.collections.ArrayList") {
+//        val propertyType = type.declaration
+//        logger?.warn("类型$propertyType")
+//        logger?.warn("类型${propertyType.typeParameters}")
+//        if (propertyType is ArrayList<*>) {
+//            logger?.warn("类型2$propertyType")
+//        }
+//
+//    }
     @Suppress("KotlinConstantConditions")
     return when (type.declaration.qualifiedName?.asString()) {
         Consts.KBYTE -> TypeKind.BYTE.ordinal
@@ -22,13 +36,26 @@ internal fun KSPropertyDeclaration.typeExchange(): Int {
         Consts.KBOOLEAN -> TypeKind.BOOLEAN.ordinal
         Consts.KCHAR -> TypeKind.CHAR.ordinal
         Consts.KSTRING -> TypeKind.STRING.ordinal
+        //
+        Consts.KARRAYLIST -> TypeKind.SERIALIZABLE.ordinal
+//        Consts.PARCELABLE -> TypeKind.PARCELABLE.ordinal
         else -> {
-            when (this.isSubclassOf(listOf(Consts.PARCELABLE, Consts.SERIALIZABLE))) {
-                0 -> TypeKind.PARCELABLE.ordinal
-                1 -> TypeKind.SERIALIZABLE.ordinal
-                else -> TypeKind.OBJECT.ordinal
+            if (this.isParcelable()) {
+                TypeKind.PARCELABLE.ordinal
+            } else if (this.isSerializable()) {
+                TypeKind.SERIALIZABLE.ordinal
+            } else {
+                TypeKind.OBJECT.ordinal
             }
+
         }
+//        else -> {
+//            when (this.isSubclassOf(listOf(Consts.PARCELABLE, Consts.SERIALIZABLE))) {
+//                0 -> TypeKind.PARCELABLE.ordinal
+//                1 -> TypeKind.SERIALIZABLE.ordinal
+//                else -> TypeKind.OBJECT.ordinal
+//            }
+//        }
     }
 }
 
