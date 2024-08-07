@@ -195,16 +195,29 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
             val annotation = ksPropertyDeclaration.findAnnotationWithType<Autowired>()!!
             val fieldName = ksPropertyDeclaration.simpleName.asString()
             val propertyType = ksPropertyDeclaration.getKotlinPoetTTypeGeneric()
+            var propertyTypeNoNull = propertyType.copy(false, propertyType.annotations)
             if (annotation.name.isEmpty()) { // User has not set service path, then use byType.
-                injectMethodBuilder.addStatement(
-                    "substitute.$fieldName = %T.getInstance().navigation(%T::class.java)",
-                    AROUTER_CLASS_NAME, propertyType
+                injectMethodBuilder.addCode(
+                    CodeBlock.builder()
+                        .beginControlFlow("%T.getInstance().navigation(%T::class.java)?.let", AROUTER_CLASS_NAME, propertyTypeNoNull)
+                        .addStatement("substitute.%L = it", fieldName)
+                        .endControlFlow().build()
                 )
+//                injectMethodBuilder.addStatement(
+//                    "substitute.$fieldName = %T.getInstance().navigation(%T::class.java)",
+//                    AROUTER_CLASS_NAME, propertyType
+//                )
             } else { // use byName
-                injectMethodBuilder.addStatement(
-                    "substitute.$fieldName = %T.getInstance().build(%S).navigation() as %T",
-                    AROUTER_CLASS_NAME, annotation.name, propertyType
+                injectMethodBuilder.addCode(
+                    CodeBlock.builder()
+                        .beginControlFlow("(%T.getInstance().build(%S).navigation() as? %T)?.let", AROUTER_CLASS_NAME, annotation.name, propertyTypeNoNull)
+                        .addStatement("substitute.%L = it", fieldName)
+                        .endControlFlow().build()
                 )
+//                injectMethodBuilder.addStatement(
+//                    "substitute.$fieldName = %T.getInstance().build(%S).navigation() as %T",
+//                    AROUTER_CLASS_NAME, annotation.name, propertyType
+//                )
             }
             // Validator
             if (annotation.required) {
@@ -287,6 +300,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
             } else {
                 // such as: val param = List<JailedBird> ==> %T ==> List<JailedBird>
                 val parameterClassName = property.getKotlinPoetTTypeGeneric()
+                var parameterClassNameNoNull = parameterClassName.copy(false)
 //                logger.warn(">>> 开始设置字段. <<<")
 //                logger.warn("${fieldName}     ${type}")
                 when (type) {
@@ -313,7 +327,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                         }
                         method.addCode(
                             CodeBlock.builder()
-                                .beginControlFlow(beginStatement, bundleName, parameterClassName)
+                                .beginControlFlow(beginStatement, bundleName, parameterClassNameNoNull)
                                 .addStatement("substitute.%L = it", fieldName)
                                 .endControlFlow().build()
                         )
@@ -344,7 +358,7 @@ class AutowiredSymbolProcessorProvider : SymbolProcessorProvider {
                             .beginControlFlow("if(!res.isNullOrEmpty())")
                             .addStatement(
                                 "serializationService?.parseObject<%T>(res, (object : TypeWrapper<%T>(){}).type)?.let{ substitute.%L = it }",
-                                parameterClassName, parameterClassName, fieldName
+                                parameterClassNameNoNull, parameterClassNameNoNull, fieldName
                             )
                             .endControlFlow()
                             .nextControlFlow("else")

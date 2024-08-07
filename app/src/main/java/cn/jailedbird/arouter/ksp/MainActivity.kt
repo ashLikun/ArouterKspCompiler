@@ -15,7 +15,7 @@ import com.alibaba.android.arouter.launcher.ARouter
 class MainActivity : AppCompatActivity() {
 
     @Autowired
-    var list = mutableListOf<String>()
+    var list: MutableList<String>? = null
 
     @Autowired
     var arrayList = arrayListOf<String>()
@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity() {
     @Autowired
     var hasSet = HashSet<LinkedHashMap<String, ArrayList<Int>>>()
 
+    @Autowired
+    var testService1: ITestService1? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
