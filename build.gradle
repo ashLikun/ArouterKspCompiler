@@ -2,8 +2,8 @@
 
 buildscript {
     ext {
-        kotlinVersion = '1.9.0'
-        kspVersion = "${kotlinVersion}-1.0.13"
+        kotlinVersion = '2.0.0'
+        kspVersion = "${kotlinVersion}-1.0.24"
     }
     repositories {
         maven { url 'https://maven.aliyun.com/repository/public/' }
