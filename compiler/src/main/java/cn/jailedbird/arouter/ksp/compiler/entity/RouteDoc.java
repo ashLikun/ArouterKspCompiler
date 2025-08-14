@@ -2,7 +2,6 @@ package cn.jailedbird.arouter.ksp.compiler.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
 
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -56,7 +55,7 @@ public class RouteDoc {
     }
 
     public void addPrototype(String prototype) {
-        if (StringUtils.isNotEmpty(getPrototype())) {
+        if (isNotEmpty(getPrototype())) {
             setPrototype(prototype);
         } else {
             setPrototype(getPrototype() + ", " + prototype);
@@ -76,7 +75,7 @@ public class RouteDoc {
     }
 
     public void setDescription(String description) {
-        if (StringUtils.isNotEmpty(description)) {
+        if (isNotEmpty(description)) {
             this.description = description;
         }
     }
@@ -136,7 +135,7 @@ public class RouteDoc {
         }
 
         public void setDescription(String description) {
-            if (StringUtils.isNotEmpty(description)) {
+            if (isNotEmpty(description)) {
                 this.description = description;
             }
         }
@@ -148,5 +147,9 @@ public class RouteDoc {
         public void setRequired(boolean required) {
             this.required = required;
         }
+    }
+
+    private static boolean isNotEmpty(String str) {
+        return str != null && !str.isEmpty();
     }
 }
